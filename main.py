@@ -12,7 +12,7 @@ from typing import Literal, Optional
 app = FastAPI()
 
 BOOKS_FILE = "books.json"
-BOOKS = []
+BOOKS = {}
 
 if os.path.exists(BOOKS_FILE) and os.path.getsize(BOOKS_FILE) > 0:
     with open(BOOKS_FILE) as f:
@@ -58,9 +58,9 @@ def get_book_by_id(index: int):
 
 @app.post("/add-book")
 def add_book(book: Book):
+    book_id = uuid4().hex
     book.book_id = uuid4().hex
-    json_book = jsonable_encoder(book)
-    BOOKS.append(json_book)
+    BOOKS[book_id] = book.model_dump()
 
     with open(BOOKS_FILE, "w") as f:
         json.dump(BOOKS, f)
@@ -69,28 +69,23 @@ def add_book(book: Book):
 
 @app.delete("/delete-book/{book_id}")
 def delete_book(book_id: str):
-    for book in BOOKS:
-        if book["book_id"] == book_id:
-            BOOKS.remove(book)
-            with open(BOOKS_FILE, "w") as f:
-                json.dump(BOOKS, f)
-            return {"Book deleted successfully!"}
-
-    raise HTTPException(status_code=404, detail="No book found with that id.")
+    if book_id in BOOKS:
+        del BOOKS[book_id]
+        with open(BOOKS_FILE, "w") as f:
+            json.dump(BOOKS, f)
+        return {"Book deleted successfully!"}
+    else:
+        raise HTTPException(
+            status_code=404, detail="No book found with that id.")
 
 
 @app.put("/update-book/{book_id}")
 def update_book(book_id: int, book: Book):
-    for b in BOOKS:
-        if b["book_id"] == book_id:
-            b["title"] = book.title
-            b["author"] = book.author
-            b["genre"] = book.genre
-            b["price"] = book.price
-            b["year"] = book.year
-            with open(BOOKS_FILE, "w") as f:
-                json.dump(BOOKS, f)
-            return {"Book updated successfully!"}
+    if book_id in BOOKS:
+        BOOKS[book_id].update(book.model_dump())
+        with open(BOOKS_FILE, "w") as f:
+            json.dump(BOOKS, f)
+    return {"Book updated successfully!"}
 
     raise HTTPException(status_code=404, detail="No book found with that id.")
 
