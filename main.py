@@ -58,13 +58,13 @@ def get_book_by_id(index: int):
 
 @app.post("/add-book")
 def add_book(book: Book):
-    book_id = uuid4().hex
-    book.book_id = uuid4().hex
+    book_id = str(uuid4().hex)
+    # book.book_id = UUID(book_id)
     BOOKS[book_id] = book.model_dump()
 
     with open(BOOKS_FILE, "w") as f:
         json.dump(BOOKS, f)
-    return {"Book added successfully! Book id: " + book.book_id}
+    return {"Book added successfully! Book id: " + str(book.book_id)}
 
 
 @app.delete("/delete-book/{book_id}")
