@@ -8,8 +8,10 @@ from uuid import uuid4
 from uuid import UUID, uuid4
 from pydantic import BaseModel
 from typing import Literal, Optional
+from mangum import Mangum
 
 app = FastAPI()
+handler = Mangum(app)
 
 BOOKS_FILE = "books.json"
 BOOKS = []
